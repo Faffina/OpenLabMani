@@ -2,6 +2,7 @@
 LiquidCrystal lcd(6, 7, 2, 3, 4, 5);
 int ai, af, bi, bf;
 bool a = false, b = false;
+
 void setup() {  
   lcd.begin(16, 2);
   pinMode(A0, INPUT); //a i
