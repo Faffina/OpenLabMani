@@ -1,25 +1,24 @@
 #include <LiquidCrystal.h>
-LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
-unsigned long ai, bi, ci, di, af, bf, cf, df;
-bool a = false, b = false, c = false, d = false;
-int modalita;
-float l1, l2, l3, l4;
-int encoderPin1 = 10;
-int encoderPin2 = 11;
-volatile int lastEncoded = 0;
-volatile long encoderValue = 0;
-long lastencoderValue = 0;
-String farsi[] = {"sel mod", "uno", "due", "oscu", "v uno", "v due", "v oscu"};
+LiquidCrystal lcd(8, 9, 4, 5, 6, 7); // oggetto LiquidCrystal per condrolarre il disaply
+unsigned long ai, bi, ci, di, af, bf, cf, df; // valori per calco delle funzioni unConometro, dueConometri osscuramto
+bool a = false, b = false, c = false, d = false; // volori logici delle funzioni unConometro, dueConometri osscuramto
+int modalita; //valore enum della modalita 
+int as = A0, bs = A1, cs = A2, ds = A3, bottone = 10, bswitch = 11, clk = 2, dt = 3; // vlore dei pin
+float l1, l2, l3, l4; // distanza inserite da utente salvate k
+volatile int lastEncoded = 0; // volore per logica della funzionde updateEncoder
+volatile long encoderValue = 0; // valore assoluto delle posizone delle rotary encoded
+String Smodalita[] = { "uno", "due", "oscu", "v uno", "v due", "v oscu"}; // fataso che descrivonao le diverse modalita
 
+/*mdalita di due conometro, l'argomento v indica se che un distaza inserita dalla utente*/
 void dueConometri(bool v = false){
   if(!a){
-    if(digitalRead(A0)){
+    if(digitalRead(as)){
       ai = millis();
       a =  true;
     }
   }
   else{
-    if(digitalRead(A1)){
+    if(digitalRead(bs)){
       bi = millis();
       a = false;
       lcd.setCursor(0, 0);
@@ -29,13 +28,13 @@ void dueConometri(bool v = false){
   }
 
   if(!b){
-    if(digitalRead(A2)){
+    if(digitalRead(cs)){
       ci = millis();
       b =  true;
     }
   }
   else{
-    if(digitalRead(A3)){
+    if(digitalRead(ds)){
       di = millis();
       b = false;
       lcd.setCursor(0, 1);
@@ -45,15 +44,16 @@ void dueConometri(bool v = false){
   }
 }
 
+/*mdalita di un conometro, l'argomento v indica se che un distaza inserita dalla utente*/
 void unConometro(bool v = false){
   if(!a){
-    if(digitalRead(A0)){
+    if(digitalRead(as)){
       ai = millis();
       a =  true;
     }
   }
   else{
-    if(digitalRead(A1)){
+    if(digitalRead(bs)){
       bi = millis();
       a = false;
       lcd.setCursor(0, 0);
@@ -62,11 +62,11 @@ void unConometro(bool v = false){
     }
   }
 }
-
+/*mdalita di osscuramto, l'argomento v indica se che un distaza inserita dalla utente*/
 void oscuramento(bool v = false){   
   if(a)
   {
-    if(!digitalRead(A0)){
+    if(!digitalRead(as)){
       af = millis();
       lcd.setCursor(0, 0);
       if(!v){lcd.print("a "+String(float(af - ai)/1000)+" s   ");}
@@ -76,7 +76,7 @@ void oscuramento(bool v = false){
   }
   else
   {
-    if(digitalRead(A0))
+    if(digitalRead(as))
     {
       ai = millis();
       a = true;
@@ -84,7 +84,7 @@ void oscuramento(bool v = false){
   }
   if(b)
   {
-    if(!digitalRead(A1)){
+    if(!digitalRead(bs)){
       bf = millis();
       lcd.setCursor(0, 1);
       if(!v){lcd.print("b "+String(float(bf - bi)/1000)+" s   ");}
@@ -94,7 +94,7 @@ void oscuramento(bool v = false){
   }
   else
   {
-    if(digitalRead(A1))
+    if(digitalRead(bs))
     {
       bi = millis();
       b = true;
@@ -102,7 +102,7 @@ void oscuramento(bool v = false){
   }
   if(c)
   {
-    if(!digitalRead(A2)){
+    if(!digitalRead(cs)){
       cf = millis();
       lcd.setCursor(0, 2);
       if(!v){lcd.print("c "+String(float(cf - ci)/1000)+" s   ");}
@@ -112,7 +112,7 @@ void oscuramento(bool v = false){
   }
   else
   {
-    if(digitalRead(A2))
+    if(digitalRead(cs))
     {
       ci = millis();
       c = true;
@@ -120,7 +120,7 @@ void oscuramento(bool v = false){
   }
   if(d)
   {
-    if(!digitalRead(A3)){
+    if(!digitalRead(ds)){
       df = millis();
       lcd.setCursor(0, 3);
       if(!v){lcd.print("d "+String(float(df - di)/1000)+" s   ");}
@@ -130,7 +130,7 @@ void oscuramento(bool v = false){
   }
   else
   {
-    if(digitalRead(A3))
+    if(digitalRead(ds))
     {
       di = millis();
       d = true;
@@ -138,48 +138,26 @@ void oscuramento(bool v = false){
   }
 }
 
-void print(String a,String b,String c,String d){
-  lcd.setCursor(0,0);
-  lcd.print(a);
-  lcd.setCursor(0,1);
-  lcd.print(b);
-  lcd.setCursor(0,2);
-  lcd.print(c);
-  lcd.setCursor(0,3);
-  lcd.print(d);
-}
-
-void sd(){
-  String temp = farsi[0]; 
-  for(int i=0;i<6;i++) farsi[i] = farsi[i+1]; 
-  farsi[6] = temp;
-}
-
-void ss()
-{
-  String temp = farsi[6]; 
-  for(int i=6;i>=0;i--) farsi[i+1] = farsi[i];  
-  farsi[0] = temp;
-}
-
+/*seleziona un vaolore foalt per lo spazio utilizando il rotary encoded*/
 float seleziona(String info){
-  encoderValue = 0;
-  lastencoderValue = 0;
-  lcd.setCursor(0,0);
+  encoderValue = 0; //azeramento dei volori rotary encoded
+  lcd.setCursor(0,0); //print di delle informazioni
   lcd.print(info);
-  while(true){
+  while(true){ //while loop per sgilere la distnza
     lcd.setCursor(0,1);
     lcd.print("d = ");
-    lcd.print(float(encoderValue)/14.0f);
+    lcd.print(float(encoderValue/4)/10.0f); // print della distnza atualle
     lcd.print(" cm ");
-    updateEncoder();
-    if(digitalRead(3)) break;
+    if(!digitalRead(bottone)) break; // uscita delle loop quando vine premuto il bottone delle rotary encoded
   }
-  return float(encoderValue)/14.0f;
+  lcd.clear();
+  delay(500);
+  return float(encoderValue/4)/10.0f; 
 }
 
+/*funzione menu per seglier la modalita*/
 void menu(){
-  a = false;
+  a = false; //azzermaento dei datti logoci e di calcolo per impedire errrori
   b = false;
   c = false;
   d = false;
@@ -187,58 +165,62 @@ void menu(){
   bi = 0;
   ci = 0;
   di = 0; 
-  int pos;
+  int rel;
   while(true){
-    updateEncoder();
-    if(lastencoderValue/4 - encoderValue/4 < 0) {pos++; ss();}
-    if(lastencoderValue/4 - encoderValue/4 > 0) {pos--; sd();}
-    int cur = (abs(pos) % 7) - 1;
-    if (cur > 0){
-      print("> " + farsi[0], farsi[1], "", "");
-      if(digitalRead(3)){
-      modalita = cur;
-      if(cur < 3) break;
-      else{
-        if(cur == 3) {l1 = seleziona("dis ta a-b");}
-        if(cur == 4) {l1 = seleziona("dis ta a-b");l2 = seleziona("dis ta c-d");}
-        if(cur == 3) {l1 = seleziona("dis ta a");l2 = seleziona("dis ta b");l3 = seleziona("dis ta c");l4 = seleziona("dis ta d");}
-        break;
-      }}
+    rel = (encoderValue / 4) % 6; // valore relativo delle posizone divoso 4 per diminure la volcita
+    lcd.setCursor(0,0);
+    lcd.print("seleziona mod");
+    lcd.setCursor(0,1);
+    lcd.print("> " + Smodalita[rel]);
+    if(!digitalRead(bottone)){
+      delay(500);
+      modalita = rel;
+      if(rel == 3) l1 = seleziona("dis a-b");
+      if(rel == 4) {l1 = seleziona("dis a-b"); l2 = seleziona("dis c-d");}
+      if(rel == 5) {l1 = seleziona("dis a"); l2 = seleziona("dis b"); l3 = seleziona("dis c"); l4 = seleziona("dis d");}
+      break;
     }
-    else{print(farsi[0], farsi[1], "", "");}
   }
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Selzioto:");
+  lcd.setCursor(0,1);
+  lcd.print(Smodalita[rel]);
+  delay(500);
+  lcd.clear();
 }
 
 void updateEncoder(){
-  int MSB = digitalRead(10); //MSB = most significant bit
-  int LSB = digitalRead(11); //LSB = least significant bit
+  int MSB = digitalRead(clk); //MSB = most significant bit
+  int LSB = digitalRead(dt); //LSB = least significant bit
  
   int encoded = (MSB << 1) |LSB; //converting the 2 pin value to single number
   int sum  = (lastEncoded << 2) | encoded; //adding it to the previous encoded value
  
-  if(sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) lastencoderValue = encoderValue ++;
-  if(sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) lastencoderValue = encoderValue --;
+  if(sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) encoderValue ++;
+  if(sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) encoderValue --;
  
   lastEncoded = encoded; //store this value for next time
 }
-
+/*dicarazione dei pin e le loro modaita, inzializione delle oggetto lcd e Serial(opzionale per test)*/
 void setup() {  
-  Serial.begin(9600);
+  //Serial.begin(9600);
   lcd.begin(16, 2);
-  pinMode(A0, INPUT); 
-  pinMode(A1, INPUT); 
-  pinMode(A2, INPUT); 
-  pinMode(A3, INPUT); 
-  lcd.begin(16,2);
-  pinMode(10, INPUT);
-  pinMode(11, INPUT);
-  pinMode(2, INPUT);
-  pinMode(3, INPUT);
-  attachInterrupt(digitalPinToInterrupt(2), menu, RISING);
+  pinMode(as, INPUT); 
+  pinMode(bs, INPUT); 
+  pinMode(cs, INPUT); 
+  pinMode(ds, INPUT); 
+  pinMode(bottone, INPUT);
+  pinMode(bswitch, INPUT);
+  pinMode(clk, INPUT);
+  pinMode(dt, INPUT);
+  attachInterrupt(digitalPinToInterrupt(clk), updateEncoder, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(dt), updateEncoder, CHANGE);
 }  
 
 void loop(){
-    switch(modalita){
+  if(digitalRead(bswitch)) seleziona("dis a-b"); //apre il menu se il switch e alto
+  switch(modalita){ //seleziona la modalita e chiama la rispetiva funzionne
       case 0:
         unConometro();
         break;
