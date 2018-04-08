@@ -7,7 +7,7 @@ int as = A0, bs = A1, cs = A2, ds = A3, bottone = 10, bswitch = 11, clk = 2, dt 
 float l1, l2, l3, l4; // distanza inserite da utente salvate k
 volatile int lastEncoded = 0; // volore per logica della funzionde updateEncoder
 volatile long encoderValue = 0; // valore assoluto delle posizone delle rotary encoded
-String Smodalita[] = { "uno", "due", "oscu", "v uno", "v due", "v oscu"}; // fataso che descrivonao le diverse modalita
+String Smodalita[] = { "uno     ", "due     ", "oscu    ", "v uno     ", "v due   ", "v oscu   "}; // fataso che descrivonao le diverse modalita
 
 /*mdalita di due conometro, l'argomento v indica se che un distaza inserita dalla utente*/
 void dueConometri(bool v = false){
@@ -23,7 +23,7 @@ void dueConometri(bool v = false){
       a = false;
       lcd.setCursor(0, 0);
       if(!v){lcd.print("a-b "+String(float(bi - ai)/1000, 2)+" s   ");}
-      else{lcd.print("a-b "+String(l1/(float(bi - ai)/1000), 2)+" m/s   ");}
+      else{lcd.print("a-b "+String(l1/(float(bi - ai)/1000), 2)+" cm/s   ");}
     }
   }
 
@@ -39,7 +39,7 @@ void dueConometri(bool v = false){
       b = false;
       lcd.setCursor(0, 1);
       if(!v){lcd.print("c-d "+String(float(di - ci)/1000, 2)+" s   ");}
-      else{lcd.print("c-d "+String(l2/(float(di - ci)/1000), 2)+" m/s   ");}
+      else{lcd.print("c-d "+String(l2/(float(di - ci)/1000), 2)+" cm/s   ");}
     }
   }
 }
@@ -58,7 +58,7 @@ void unConometro(bool v = false){
       a = false;
       lcd.setCursor(0, 0);
       if(!v){lcd.print("a-b "+String(float(bi - ai)/1000, 2)+" s   ");}
-      else{lcd.print("a-b "+String(l1/(float(bi - ai)/1000), 2)+" m/s   ");}
+      else{lcd.print("a-b "+String(l1/(float(bi - ai)/1000), 2)+" cm/s   ");}
     }
   }
 }
@@ -70,7 +70,7 @@ void oscuramento(bool v = false){
       af = millis();
       lcd.setCursor(0, 0);
       if(!v){lcd.print("a "+String(float(af - ai)/1000)+" s   ");}
-      else{lcd.print("a "+String(l1/(float(af - ai))/1000)+" m/s   ");}
+      else{lcd.print("a "+String(l1/(float(af - ai)/1000))+" cm/s   ");}
       a = false;
     }
   }
@@ -88,7 +88,7 @@ void oscuramento(bool v = false){
       bf = millis();
       lcd.setCursor(0, 1);
       if(!v){lcd.print("b "+String(float(bf - bi)/1000)+" s   ");}
-      else{lcd.print("b "+String(l2/(float(bf - bi))/1000)+" m/s   ");}
+      else{lcd.print("b "+String(l2/(float(bf - bi)/1000))+" cm/s   ");}
       b = false;
     }
   }
@@ -106,7 +106,7 @@ void oscuramento(bool v = false){
       cf = millis();
       lcd.setCursor(0, 2);
       if(!v){lcd.print("c "+String(float(cf - ci)/1000)+" s   ");}
-      else{lcd.print("c "+String(l3/(float(cf - ci))/1000)+" m/s   ");}
+      else{lcd.print("c "+String(l3/(float(cf - ci)/1000))+" cm/s   ");}
       c = false;
     }
   }
@@ -124,7 +124,7 @@ void oscuramento(bool v = false){
       df = millis();
       lcd.setCursor(0, 3);
       if(!v){lcd.print("d "+String(float(df - di)/1000)+" s   ");}
-      else{lcd.print("d "+String(l4/(float(df - di))/1000)+" m/s   ");}
+      else{lcd.print("d "+String(l4/(float(df - di)/1000))+" cm/s   ");}
       d = false;
     }
   }
@@ -167,7 +167,7 @@ void menu(){
   di = 0; 
   int rel;
   while(true){
-    rel = (encoderValue / 4) % 6; // valore relativo delle posizone divoso 4 per diminure la volcita
+    rel = abs(encoderValue / 4) % 6; // valore relativo delle posizone divoso 4 per diminure la volcita
     lcd.setCursor(0,0);
     lcd.print("seleziona mod");
     lcd.setCursor(0,1);
@@ -175,6 +175,7 @@ void menu(){
     if(!digitalRead(bottone)){
       delay(500);
       modalita = rel;
+      lcd.clear();
       if(rel == 3) l1 = seleziona("dis a-b");
       if(rel == 4) {l1 = seleziona("dis a-b"); l2 = seleziona("dis c-d");}
       if(rel == 5) {l1 = seleziona("dis a"); l2 = seleziona("dis b"); l3 = seleziona("dis c"); l4 = seleziona("dis d");}
@@ -183,10 +184,12 @@ void menu(){
   }
   lcd.clear();
   lcd.setCursor(0,0);
-  lcd.print("Selzioto:");
+  lcd.print("Hai selzioto:");
   lcd.setCursor(0,1);
   lcd.print(Smodalita[rel]);
-  delay(500);
+  delay(1500);
+  lcd.clear();
+  while(digitalRead(bswitch)){lcd.setCursor(0,0); lcd.print("abbasa l'interutore");}
   lcd.clear();
 }
 
@@ -219,7 +222,7 @@ void setup() {
 }  
 
 void loop(){
-  if(digitalRead(bswitch)) seleziona("dis a-b"); //apre il menu se il switch e alto
+  if(digitalRead(bswitch)) menu();//apre il menu se il switch e alto
   switch(modalita){ //seleziona la modalita e chiama la rispetiva funzionne
       case 0:
         unConometro();
