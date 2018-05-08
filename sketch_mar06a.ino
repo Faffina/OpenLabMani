@@ -8,7 +8,7 @@ float l1, l2, l3, l4; // distanza inserite da utente salvate k
 volatile int lastEncoded = 0; // volore per logica della funzionde updateEncoder
 volatile long encoderValue = 0; // valore assoluto delle posizone delle rotary encoded
 String Smodalita[] = { "uno     ", "due     ", "oscu    ", "v uno     ", "v due   ", "v oscu   "}; // fataso che descrivonao le diverse modalita
-
+//faffa
 /*mdalita di due conometro, l'argomento v indica se che un distaza inserita dalla utente*/
 void dueConometri(bool v = false){
   if(!a){
